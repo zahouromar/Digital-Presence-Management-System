@@ -1,0 +1,707 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DPMS - Digital Presence Management System</title>
+    <link rel="stylesheet" href="style.css?v=3" />
+    <script
+      src="https://unpkg.com/html5-qrcode"
+      type="text/javascript"
+    ></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  </head>
+  <body>
+    <section
+      id="login-view"
+      class="view active"
+      style="
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #f8fafc;
+        padding: 20px;
+      "
+    >
+      <div style="width: 100%; max-width: 420px">
+        <div style="text-align: center; margin-bottom: 30px">
+          <img
+            src="assets/dpms_logo.svg"
+            alt="DPMS Logo"
+            style="height: 60px; max-width: 100%"
+          />
+        </div>
+        <div
+          id="login-message"
+          class="message"
+          style="display: none; margin-bottom: 20px"
+        ></div>
+        <form
+          id="login-form"
+          style="max-width: 100%; width: 100%; margin-top: 0"
+        >
+          <h2>System Login</h2>
+          <div class="form-group">
+            <label for="login-username">Username</label>
+            <input
+              type="text"
+              id="login-username"
+              required
+              autocomplete="username"
+              placeholder="Enter username"
+            />
+          </div>
+          <div class="form-group">
+            <label for="login-password">Password</label>
+            <input
+              type="password"
+              id="login-password"
+              required
+              autocomplete="current-password"
+              placeholder="Enter password"
+            />
+          </div>
+          <button type="submit" style="width: 100%; margin-top: 10px">
+            Login
+          </button>
+          <p style="margin-top: 10px; text-align: center; font-size: 14px">
+            <a href="#" onclick="showRegisterParentView()"
+              >Are you a Parent? Register Here</a
+            >
+          </p>
+        </form>
+      </div>
+    </section>
+    <section
+      id="register-parent-view"
+      class="view"
+      style="
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #f8fafc;
+        padding: 20px;
+      "
+    >
+      <div style="width: 100%; max-width: 420px">
+        <form
+          id="register-parent-form"
+          style="max-width: 100%; width: 100%; margin-top: 0"
+        >
+          <h2 style="text-align: center; margin-bottom: 20px">
+            Parent Registration
+          </h2>
+          <div class="form-group">
+            <label for="reg-parent-fullname">Your Full Name</label>
+            <input type="text" id="reg-parent-fullname" required />
+          </div>
+          <div class="form-group">
+            <label for="reg-student-regnumber"
+              >Student Registration Number</label
+            >
+            <input type="text" id="reg-student-regnumber" required />
+          </div>
+          <div class="form-group">
+            <label for="reg-secret-key">Secret Key (From School)</label>
+            <input type="text" id="reg-secret-key" required />
+          </div>
+          <div class="form-group">
+            <label for="reg-username">Choose Username</label>
+            <input type="text" id="reg-username" required />
+          </div>
+          <div class="form-group">
+            <label for="reg-password">Choose Password</label>
+            <input type="password" id="reg-password" required />
+          </div>
+          <button type="submit" class="btn-primary" style="width: 100%">
+            Register
+          </button>
+          <p style="margin-top: 10px; text-align: center; font-size: 14px">
+            <a href="#" onclick="showLoginView()">Back to Login</a>
+          </p>
+        </form>
+      </div>
+    </section>
+    <div id="app-layout" class="app-layout" style="display: none">
+      <aside class="sidebar">
+        <div class="sidebar-brand">
+          <img
+            src="assets/dpms_logo.svg"
+            alt="DPMS Logo"
+            style="
+              height: 40px;
+              max-width: 100%;
+              display: block;
+              margin-bottom: 10px;
+            "
+          />
+          <span id="user-display">Not Logged In</span>
+        </div>
+        <nav class="sidebar-nav" id="sidebar-navigation"></nav>
+        <div class="sidebar-footer">
+          <button id="btn-logout" style="width: 100%; background: #ef4444">
+            Logout
+          </button>
+        </div>
+      </aside>
+      <main class="main-content">
+        <div id="global-message" class="message" style="display: none"></div>
+        <section id="admin-dashboard-view" class="view">
+          <div class="dashboard-grid">
+            <div class="card">
+              <h3>Total Students</h3>
+              <div class="card-num" id="stat-total-students">0</div>
+            </div>
+            <div class="card">
+              <h3>Today's Attendance</h3>
+              <div class="card-num" id="stat-today-attendance">0</div>
+            </div>
+            <div class="card">
+              <h3>Teachers</h3>
+              <div class="card-num" id="stat-total-teachers">0</div>
+            </div>
+          </div>
+          <div
+            class="card"
+            style="text-align: left; padding: 25px; margin-top: 30px"
+          >
+            <h3
+              style="
+                margin-bottom: 20px;
+                font-size: 16px;
+                font-weight: 700;
+                color: #0f172a;
+              "
+            >
+              Weekly Attendance Trend
+            </h3>
+            <div style="position: relative; height: 320px; width: 100%">
+              <canvas id="attendance-chart"></canvas>
+            </div>
+          </div>
+        </section>
+        <section id="teacher-dashboard-view" class="view">
+          <h2>My Classes</h2>
+          <div
+            id="teacher-classes-list"
+            style="
+              display: flex;
+              gap: 15px;
+              flex-wrap: wrap;
+              margin-bottom: 30px;
+            "
+          ></div>
+          <div
+            id="teacher-class-detail"
+            style="
+              display: none;
+              border-top: 1px solid #e2e8f0;
+              padding-top: 20px;
+            "
+          >
+            <h3 id="teacher-class-name" style="margin-bottom: 15px">
+              Class Name
+            </h3>
+            <div
+              style="
+                display: flex;
+                gap: 15px;
+                align-items: flex-end;
+                margin-bottom: 20px;
+                flex-wrap: wrap;
+              "
+            >
+              <div
+                class="form-group"
+                style="margin-bottom: 0; min-width: 200px"
+              >
+                <label>Registration Number</label>
+                <input
+                  type="text"
+                  id="teacher-reg-input"
+                  placeholder="Enter Registration No."
+                />
+              </div>
+              <button class="btn btn-primary" onclick="markStudentPresent()">
+                Mark PRESENT
+              </button>
+              <button
+                class="btn btn-secondary"
+                onclick="alert('QR Code Scanner not detected')"
+              >
+                Use QR Scanner
+              </button>
+              <button
+                class="btn btn-danger"
+                onclick="markRemainingAbsent()"
+                style="margin-left: auto"
+              >
+                Mark Remaining ABSENT
+              </button>
+            </div>
+            <table>
+              <thead>
+                <tr>
+                  <th>Reg Number</th>
+                  <th>Student Name</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="teacher-class-students-body"></tbody>
+            </table>
+          </div>
+        </section>
+        <section id="student-portal-view" class="view">
+          <h2 id="student-portal-greeting">My Dashboard</h2>
+          <div
+            style="
+              display: flex;
+              gap: 24px;
+              flex-wrap: wrap;
+              margin-bottom: 30px;
+              align-items: flex-start;
+            "
+          >
+            <div
+              class="card"
+              style="text-align: center; padding: 30px; min-width: 240px"
+            >
+              <h3 style="margin-bottom: 15px; font-size: 15px; color: #475569">
+                Your Digital QR Badge
+              </h3>
+              <img
+                id="student-qr-image"
+                src=""
+                alt="Your QR Code"
+                style="
+                  width: 180px;
+                  height: 180px;
+                  border: 2px solid #e2e8f0;
+                  border-radius: 8px;
+                  display: block;
+                  margin: 0 auto 15px;
+                "
+              />
+              <a
+                id="student-qr-download"
+                href="#"
+                download="my_qr_badge.png"
+                class="btn-link"
+                style="display: inline-block; font-size: 13px"
+                >⬇ Download Badge</a
+              >
+            </div>
+            <div
+              style="
+                flex: 1;
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+                gap: 16px;
+              "
+            >
+              <div class="card" style="text-align: center">
+                <h3>Total Days</h3>
+                <div class="card-num" id="student-stat-total">0</div>
+              </div>
+              <div class="card" style="text-align: center">
+                <h3>Present</h3>
+                <div
+                  class="card-num"
+                  id="student-stat-present"
+                  style="color: #059669"
+                >
+                  0
+                </div>
+              </div>
+              <div class="card" style="text-align: center">
+                <h3>Late</h3>
+                <div
+                  class="card-num"
+                  id="student-stat-late"
+                  style="color: #d97706"
+                >
+                  0
+                </div>
+              </div>
+              <div class="card" style="text-align: center">
+                <h3>Absent</h3>
+                <div
+                  class="card-num"
+                  id="student-stat-absent"
+                  style="color: #dc2626"
+                >
+                  0
+                </div>
+              </div>
+            </div>
+          </div>
+          <h3
+            style="
+              font-size: 15px;
+              font-weight: 700;
+              color: #0f172a;
+              margin-bottom: 15px;
+            "
+          >
+            Attendance History
+          </h3>
+          <table>
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Check-in Time</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="student-attendance-body"></tbody>
+          </table>
+        </section>
+        <section id="parent-portal-view" class="view">
+          <h2 id="parent-portal-greeting">Parent Dashboard</h2>
+          <div
+            style="
+              display: flex;
+              gap: 24px;
+              flex-wrap: wrap;
+              margin-bottom: 30px;
+              align-items: stretch;
+            "
+          >
+            <div class="card" style="padding: 20px; min-width: 260px; display: flex; flex-direction: column; justify-content: center;">
+              <h3 style="margin-bottom: 10px; font-size: 15px; color: #475569">
+                Your Child
+              </h3>
+              <p
+                style="font-weight: bold; font-size: 18px; margin-bottom: 5px"
+                id="parent-child-name"
+              >
+                --
+              </p>
+              <p style="color: #64748b; font-size: 14px" id="parent-child-reg">
+                --
+              </p>
+            </div>
+            <div style="flex: 1; min-width: 300px">
+              <div
+                style="
+                  display: grid;
+                  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+                  gap: 14px;
+                "
+              >
+                <div class="card" style="text-align: center">
+                  <h3>Total</h3>
+                  <div class="card-num" id="parent-stat-total">0</div>
+                </div>
+                <div class="card" style="text-align: center">
+                  <h3>Present</h3>
+                  <div
+                    class="card-num"
+                    id="parent-stat-present"
+                    style="color: #059669"
+                  >
+                    0
+                  </div>
+                </div>
+                <div class="card" style="text-align: center">
+                  <h3>Absent</h3>
+                  <div
+                    class="card-num"
+                    id="parent-stat-absent"
+                    style="color: #dc2626"
+                  >
+                    0
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <h3
+            style="
+              font-size: 15px;
+              font-weight: 700;
+              color: #0f172a;
+              margin-bottom: 15px;
+            "
+          >
+            Child's Attendance History
+          </h3>
+          <div id="parent-attendance-accordion"></div>
+        </section>
+        <section id="manage-students-view" class="view">
+          <div class="action-bar">
+            <button id="btn-add-student-nav">Add Student</button>
+            <div style="display: flex; align-items: center; gap: 10px">
+              <input
+                type="file"
+                id="csv-file-input"
+                accept=".csv"
+                style="display: none"
+                onchange="uploadCsvFile(this)"
+              />
+              <button
+                onclick="document.getElementById('csv-file-input').click()"
+                style="background-color: #10b981"
+              >
+                ⬆ Import CSV
+              </button>
+              <button
+                onclick="downloadCsvTemplate()"
+                style="background-color: #6366f1"
+              >
+                ⬇ Download Template
+              </button>
+            </div>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Registration Number</th>
+                <th>Secret Key</th>
+                <th>Student Name</th>
+                <th>Class</th>
+                <th>QR Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="students-table-body"></tbody>
+          </table>
+        </section>
+        <section id="add-student-view" class="view">
+          <h2 id="student-form-title">Add Student</h2>
+          <form id="student-form">
+            <input type="hidden" id="student-id-field" />
+            <div class="form-group">
+              <label for="student-reg">Registration Number</label>
+              <input type="text" id="student-reg" required />
+            </div>
+            <div class="form-group">
+              <label for="student-firstname">First Name</label>
+              <input type="text" id="student-firstname" required />
+            </div>
+            <div class="form-group">
+              <label for="student-lastname">Last Name</label>
+              <input type="text" id="student-lastname" required />
+            </div>
+            <div class="form-group">
+              <label for="student-gender">Gender</label>
+              <select id="student-gender" required>
+                <option value="">Select Gender</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="student-parent-name">Parent Name</label>
+              <input type="text" id="student-parent-name" required />
+            </div>
+            <div class="form-group">
+              <label for="student-parent-phone">Parent Phone</label>
+              <input type="text" id="student-parent-phone" required />
+            </div>
+            <div>
+              <button type="submit">Save Student</button>
+              <button type="button" id="btn-cancel-student">Cancel</button>
+            </div>
+          </form>
+        </section>
+        <section id="manage-teachers-view" class="view">
+          <div class="action-bar">
+            <button id="btn-add-teacher-nav">Add Teacher</button>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Teacher Name</th>
+                <th>Phone</th>
+                <th>Username</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="teachers-table-body"></tbody>
+          </table>
+        </section>
+        <section id="add-teacher-view" class="view">
+          <h2 id="teacher-form-title">Add Teacher</h2>
+          <form id="teacher-form">
+            <input type="hidden" id="teacher-id-field" />
+            <div class="form-group">
+              <label for="teacher-name">Teacher Name</label>
+              <input type="text" id="teacher-name" required />
+            </div>
+            <div class="form-group">
+              <label for="teacher-phone">Phone</label>
+              <input type="text" id="teacher-phone" required />
+            </div>
+            <div class="form-group">
+              <label for="teacher-username">Username</label>
+              <input
+                type="text"
+                id="teacher-username"
+                required
+                autocomplete="username"
+              />
+            </div>
+            <div class="form-group">
+              <label for="teacher-password" id="label-teacher-password"
+                >Password</label
+              >
+              <input
+                type="password"
+                id="teacher-password"
+                required
+                autocomplete="new-password"
+              />
+              <span
+                id="password-help"
+                style="font-size: 11px; color: #64748b; display: none"
+                >Leave blank to keep current password.</span
+              >
+            </div>
+            <div>
+              <button type="submit">Save Teacher</button>
+              <button type="button" id="btn-cancel-teacher">Cancel</button>
+            </div>
+          </form>
+        </section>
+        <section id="attendance-view" class="view">
+          <div
+            class="action-bar"
+            style="margin-top: 15px; flex-wrap: wrap; gap: 10px"
+          >
+            <div
+              class="form-group"
+              style="flex-direction: row; align-items: center; gap: 10px"
+            >
+              <label for="attendance-date-filter" style="margin-bottom: 0"
+                >Filter Date:</label
+              >
+              <input type="date" id="attendance-date-filter" />
+              <button id="btn-apply-attendance-filter">Filter</button>
+              <button id="btn-clear-attendance-filter">Clear</button>
+            </div>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Student</th>
+                <th>Class</th>
+                <th>Date</th>
+                <th>Time</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="attendance-table-body"></tbody>
+          </table>
+        </section>
+        <section id="manage-classes-view" class="view">
+          <div class="action-bar">
+            <h2 style="margin: 0">Manage Classes</h2>
+            <button class="btn btn-primary" onclick="showAddClassForm()">
+              + Add Class
+            </button>
+          </div>
+          <div
+            id="add-class-form-container"
+            class="card"
+            style="
+              display: none;
+              padding: 20px;
+              margin-bottom: 20px;
+              max-width: 500px;
+            "
+          >
+            <h3 style="margin-bottom: 15px">Create New Class</h3>
+            <form id="add-class-form">
+              <div class="form-group">
+                <label>Class Name / Subject</label>
+                <input
+                  type="text"
+                  id="new-class-name"
+                  placeholder="e.g. Mathematics 10A"
+                  required
+                />
+              </div>
+              <div class="form-group">
+                <label>Assign Teacher</label>
+                <select id="new-class-teacher">
+                  <option value="">-- None (assign later) --</option>
+                </select>
+              </div>
+              <div style="display: flex; gap: 10px">
+                <button type="submit" class="btn btn-primary">
+                  Create Class
+                </button>
+                <button
+                  type="button"
+                  onclick="hideAddClassForm()"
+                  class="btn btn-secondary"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Class Name</th>
+                <th>Teacher</th>
+                <th>Students</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="classes-table-body"></tbody>
+          </table>
+        </section>
+        <section id="class-detail-view" class="view">
+          <div class="action-bar">
+            <h2 id="class-detail-title" style="margin: 0">Class Detail</h2>
+            <button
+              onclick="showView('manage-classes-view')"
+              class="btn btn-secondary"
+            >
+              Back to Classes
+            </button>
+          </div>
+          <div
+            style="
+              display: flex;
+              gap: 20px;
+              flex-wrap: wrap;
+              margin-bottom: 20px;
+              align-items: flex-end;
+            "
+          >
+            <div class="form-group" style="margin-bottom: 0; min-width: 220px">
+              <label>Add Student by Registration No.</label>
+              <input
+                type="text"
+                id="class-add-student-reg"
+                placeholder="e.g. REG-001"
+              />
+            </div>
+            <button class="btn btn-primary" onclick="addStudentToClass()">
+              Add Student
+            </button>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Reg Number</th>
+                <th>Name</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="class-students-table-body"></tbody>
+          </table>
+        </section>
+      </main>
+    </div>
+    <script src="app.js"></script>
+  </body>
+</html>
